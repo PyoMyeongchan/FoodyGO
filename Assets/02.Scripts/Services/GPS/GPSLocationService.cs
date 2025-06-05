@@ -6,16 +6,22 @@ namespace FoodyGo.Services.GPS
 {
     public class GPSLocationService : MonoBehaviour
     {
+        public bool isReady { get; private set; }
+
         [Header("맵 타일 Settings")]
         [Tooltip("맵 타일 스케일")]
-        [SerializeField]private int _mapTileScale = 1;
-        [Tooltip("맵 타일 크기 (픽셀)")]
-        [SerializeField]private int _mapTileSizePixels = 640;
-        [Tooltip("맵 타일 Zoom 레벨 (1 ~ 20)")]
-        [SerializeField]
-        [Range(1, 20)]
-        private int _mapTileZoomLevel = 15;
+        [field: SerializeField]
+        public int mapTileScale { get; private set; } = 1;
         
+        [Tooltip("맵 타일 크기 (픽셀)")]
+        [field: SerializeField]
+        public int mapTileSizePixels { get; private set; } = 640;
+
+        [Tooltip("맵 타일 Zoom 레벨 (1 ~ 20)")]
+        [field: SerializeField]
+        [Range(1, 20)]
+        public int mapTileZoomLevel { get; private set; } = 15;
+
         [Header("Simulation Settings (Editor Only)")] 
         [SerializeField] bool _isSimulation;
         [SerializeField] Transform _simulationTarget;
@@ -43,6 +49,7 @@ namespace FoodyGo.Services.GPS
             simulatedLocationProvider.target = _simulationTarget;
             simulatedLocationProvider.startLocation = _simulationStartLocation;
             _locationProvider = simulatedLocationProvider;
+            isReady = true;
 #else
             _locationProvider = gameObject.AddComponent<DeviceLocationProvider>();
 #endif
@@ -81,14 +88,14 @@ namespace FoodyGo.Services.GPS
             mapWorldCenter.x = GoogleMapUtils.LonToX(mapCenter.longitude);
             mapWorldCenter.y = GoogleMapUtils.LatToY(mapCenter.latitude);
 
-            mapScale.x = (float)GoogleMapUtils.CalculateScaleX(latitude, _mapTileSizePixels, _mapTileScale, _mapTileZoomLevel);
-            mapScale.y = (float)GoogleMapUtils.CalculateScaleY(longitude, _mapTileSizePixels, _mapTileScale, _mapTileZoomLevel);
+            mapScale.x = (float)GoogleMapUtils.CalculateScaleX(latitude, mapTileSizePixels, mapTileScale, mapTileZoomLevel);
+            mapScale.y = (float)GoogleMapUtils.CalculateScaleY(longitude, mapTileSizePixels, mapTileScale, mapTileZoomLevel);
 
-            var lon1 = GoogleMapUtils.AdjustLonByPixels(longitude, -_mapTileSizePixels/2, _mapTileZoomLevel);
-            var lat1 = GoogleMapUtils.AdjustLatByPixels(latitude, _mapTileSizePixels/2, _mapTileZoomLevel);
+            var lon1 = GoogleMapUtils.AdjustLonByPixels(longitude, -mapTileSizePixels/2, mapTileZoomLevel);
+            var lat1 = GoogleMapUtils.AdjustLatByPixels(latitude, mapTileSizePixels/2, mapTileZoomLevel);
 
-            var lon2 = GoogleMapUtils.AdjustLonByPixels(longitude, _mapTileSizePixels/2, _mapTileZoomLevel);
-            var lat2 = GoogleMapUtils.AdjustLatByPixels(latitude, -_mapTileSizePixels/2, _mapTileZoomLevel);
+            var lon2 = GoogleMapUtils.AdjustLonByPixels(longitude, mapTileSizePixels/2, mapTileZoomLevel);
+            var lat2 = GoogleMapUtils.AdjustLatByPixels(latitude, -mapTileSizePixels/2, mapTileZoomLevel);
 
             mapEnvelope = new MapEnvelope((float)lon1, (float)lat1, (float)lon2, (float)lat2);
             
