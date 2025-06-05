@@ -1,4 +1,5 @@
 using System;
+using FoodyGo.Mapping;
 using Unity.Android.Types;
 using UnityEngine;
 
@@ -86,6 +87,9 @@ namespace FoodyGo.Services.GPS
 
             double newLatitude = startLocation.latitude + deltaLatitude;
             double newLongitude = startLocation.longitude + deltaLongitude;
+            
+            latitude = newLatitude;
+            longitude = newLongitude;
 
             onLocationUpdated?.Invoke(newLatitude, newLongitude, 0, 1f, DateTime.Now.Ticks);
             Debug.Log($"GPS 시뮬레이션 데이터 갱신됨 : Lat :{newLatitude}, Lng :{newLongitude}");
