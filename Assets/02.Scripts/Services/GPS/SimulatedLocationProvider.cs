@@ -20,12 +20,13 @@ namespace FoodyGo.Services.GPS
 
         public double altitude { get; private set; }
 
+        public bool isRunning { get; private set; } // 갱신 동작
+        
         public event Action<double, double, double, float, double> onLocationUpdated;
 
         private double _metersPerDegreeLatitude = 111320; // 위도 1도당 약 111.32km
         private float _updateLocationInterval = 0.1f; // 업데이트 간격
         private float _updatedTimeMark; // 갱신된 시간
-        private bool _isRunning; // 갱신 동작
         private Vector3 _previousTargetPosition; // 이전 프레임 타켓의 위치 
         const float MIN_MOVE_DISTANCE = 0.01f;
 
@@ -54,7 +55,7 @@ namespace FoodyGo.Services.GPS
                 throw new Exception("GPS 시뮬레이션 대상 없음");
             }
 
-            _isRunning = true;
+            isRunning = true;
             _previousTargetPosition = target.position;
             _updatedTimeMark = Time.time;
             UpdateLocation();
@@ -63,7 +64,7 @@ namespace FoodyGo.Services.GPS
 
         public void Stop()
         {
-            _isRunning = false;
+            isRunning = false;
             Debug.Log("GPS 시뮬레이션 종료");
         }
 

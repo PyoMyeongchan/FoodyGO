@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using FoodyGo.Services.GoogleMaps;
 using FoodyGo.Services.GPS;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace FoodyGo.Mapping
@@ -24,14 +25,25 @@ namespace FoodyGo.Mapping
         Vector2Int _currentCenterTileCoord;
         
         [Header("Managed mapTiles")]
-        GoogleMapTile[,] _mapTiles = new GoogleMapTile[3,3];
+        GoogleMapTile[,] _mapTiles = new GoogleMapTile[GRID_SIZE,GRID_SIZE];
         readonly int[] TILE_OFFSETS = {-1, 0, 1};
+        private const int GRID_SIZE = 3;
 
         IEnumerator Start()
         {
             yield return new WaitUntil(() => _gpsLocationService.isReady);
             InitializeTiles();
             isInitialized = true;
+        }
+
+        private void Update()
+        {
+            if (isInitialized == false)
+            {
+                return;
+            }
+            
+            HandleCenterShift();
         }
 
         /// <summary>
@@ -106,6 +118,168 @@ namespace FoodyGo.Mapping
             
         }
 
+        private void HandleCenterShift()
+        {
+           Vector2Int newCenter = CalcTileCoordinate(_gpsLocationService.mapCenter);
+           int dx = newCenter.x - _currentCenterTileCoord.x;
+           int dy = newCenter.y - _currentCenterTileCoord.y;
+
+           if (dx == 0 && dy == 0)
+           {
+               return;
+           }
+
+           if (Math.Abs(dx) == 1)
+           {
+               ShiftHorizontal(dx);
+           }
+
+           if (Math.Abs(dy) == 1)
+           {
+               ShiftVertical(dy);
+           }
+
+        }
+
+
+        /// <summary>
+        /// x축 방향 이동
+        /// </summary>
+        /// <param name="direction">타일이 움직일 방향</param>
+        private void ShiftHorizontal(int direction)
+        {
+            if (Mathf.Abs(direction) != 1)
+            {
+                throw new ArgumentException("wrong direction");
+            }
+            
+            Debug.Log($"ShiftHorizontal {direction}");
+
+            int oldX = direction > 0 ? 0 : GRID_SIZE - 1; // 사라질 인덱스
+            int newX = direction > 0 ? GRID_SIZE - 1 : 0; // 새로 생길 인덱스
+
+            GoogleMapTile[] olds = new GoogleMapTile[GRID_SIZE];
+
+            for (int i = 0; i < GRID_SIZE; i++)
+            {
+                olds[i] = _mapTiles[oldX, i];
+            }
+
+            _currentCenterTileCoord.x += direction;
+
+            // 배열 한칸씩 다 당겨주는 코드
+            if (direction > 0)
+            {
+                for (int x = 0; x < GRID_SIZE - 1; x++)
+                {
+                    for (int y = 0; y < GRID_SIZE; y++)
+                    {
+                        _mapTiles[x, y] = _mapTiles[x + 1, y];
+                    }
+                }
+            }
+            else
+            {
+                for (int x = GRID_SIZE - 1; x > 0; x--)
+                {
+                    for (int y = 0; y < GRID_SIZE; y++)
+                    {
+                        _mapTiles[x, y] = _mapTiles[x - 1, y];
+                    }
+                }
+            }
+
+            for (int y = 0; y < GRID_SIZE; y++)
+            {
+                _mapTiles[newX, y] = olds[y];
+            }
+
+            for (int x = 0; x < GRID_SIZE; x++)
+            {
+                for (int y = 0; y < GRID_SIZE; y++)
+                {
+                    GoogleMapTile tile = _mapTiles[x, y];
+                    Vector2Int offset = new Vector2Int(TILE_OFFSETS[x], TILE_OFFSETS[y]);
+                    tile.tileOffset = offset;
+                    tile.worldCenterLocation = _gpsLocationService.mapCenter;
+                    tile.transform.position = CalcWorldPosition(_currentCenterTileCoord + offset);
+
+                    if (x == newX)
+                    {
+                        tile.RefreshMapTile();
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// Z축 방향 이동
+        /// </summary>
+        /// <param name="direction">타일이 움직일 방향</param>
+         private void ShiftVertical(int direction)
+            {
+                if (Mathf.Abs(direction) != 1)
+                {
+                    throw new ArgumentException("wrong direction");
+                }
+
+                Debug.Log($"ShiftVertical {direction}");
+                
+                int oldY = direction > 0 ? 0 : GRID_SIZE - 1; // 사라질 인덱스
+                int newY = direction > 0 ? GRID_SIZE - 1 : 0; // 새로 생길 인덱스
+            
+                GoogleMapTile[] olds = new GoogleMapTile[GRID_SIZE];
+
+                for (int i = 0; i < GRID_SIZE; i++)
+                {
+                    olds[i] = _mapTiles[i, oldY];
+                }
+
+                _currentCenterTileCoord.y += direction;
+            
+                // 배열 한칸씩 다 당겨주는 코드
+                if (direction > 0)
+                {
+                    for (int x = 0; x < GRID_SIZE; x++)
+                    {
+                        for (int y = 0; y < GRID_SIZE - 1; y++)
+                        {
+                            _mapTiles[x, y] = _mapTiles[x, y + 1];    
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = 0; x < GRID_SIZE; x++)
+                    {
+                        for (int y = GRID_SIZE - 1; y > 0; y--)
+                        {
+                            _mapTiles[x, y] = _mapTiles[x, y - 1];    
+                        }
+                    }
+                }
+        
+                for (int x = 0; x < GRID_SIZE; x++)
+                {
+                    _mapTiles[x, newY] = olds[x];
+                }
+
+                for (int x = 0; x < GRID_SIZE; x++)
+                {
+                    for (int y = 0; y < GRID_SIZE; y++)
+                    {
+                        GoogleMapTile tile = _mapTiles[x, y];
+                        Vector2Int offset = new Vector2Int(TILE_OFFSETS[x], TILE_OFFSETS[newY]);
+                        tile.tileOffset = offset;
+                        tile.worldCenterLocation = _gpsLocationService.mapCenter;
+                        tile.transform.position = CalcWorldPosition(_currentCenterTileCoord + offset);
+
+                        if (y == newY)
+                        {
+                            tile.RefreshMapTile();
+                        }
+                    }
+                }
+            }
     }
     
 }

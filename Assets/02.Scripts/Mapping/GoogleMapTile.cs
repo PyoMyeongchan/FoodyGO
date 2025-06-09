@@ -30,30 +30,7 @@ namespace FoodyGo.Mapping
         public GoogleStaticMapService googleStaticMapService;
 
         [Header("GPS Services")]
-        public GPSLocationService gpsLocationService
-        {
-            get => _gpsLocationService;
-            set
-            {
-                if (value == _gpsLocationService)
-                {
-                    return;
-                }
-
-                if (value != null)
-                {
-                    if (_gpsLocationService != null)
-                    {
-                        _gpsLocationService.onMapReDraw -= RefreshMapTile;
-                    }
-                    value.onMapReDraw += RefreshMapTile;
-                }
-                _gpsLocationService = value;
-            }
-        }
-        
-
-        private GPSLocationService _gpsLocationService;
+        public GPSLocationService gpsLocationService;
 
         private MeshRenderer _renderer;
 

@@ -269,7 +269,7 @@ MonoBehaviour:
   container: {fileID: 820651843}
   gridWidth: 3
   gridHeight: 3
-  tileSize: 15
+  tileSize: 300
   animDuration: 0.2
 --- !u!114 &1794476314
 MonoBehaviour:
