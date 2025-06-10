@@ -84,7 +84,7 @@ namespace FoodyGo.Services.GPS
             accuracy = newAccuracy;
             timeStamp = newTimeStamp;
 
-            if (mapEnvelope.Contains(new MapLocation(latitude, longitude)))
+            //if (mapEnvelope.Contains(new MapLocation(latitude, longitude)))
             {
                 CenterMap();
             }

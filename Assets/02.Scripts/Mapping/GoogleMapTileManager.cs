@@ -27,11 +27,15 @@ namespace FoodyGo.Mapping
         [Header("Managed mapTiles")]
         GoogleMapTile[,] _mapTiles = new GoogleMapTile[GRID_SIZE,GRID_SIZE];
         readonly int[] TILE_OFFSETS = {-1, 0, 1};
-        private const int GRID_SIZE = 3;
+        const int GRID_SIZE = 3;
+        const float PLANE_SIZE = 10f;
+
+        MapLocation _mapOrigin;
 
         IEnumerator Start()
         {
             yield return new WaitUntil(() => _gpsLocationService.isReady);
+            _mapOrigin = _gpsLocationService.mapCenter;
             InitializeTiles();
             isInitialized = true;
         }
@@ -90,8 +94,7 @@ namespace FoodyGo.Mapping
         /// <returns>월드 포지션</returns>
         Vector3 CalcWorldPosition(Vector2Int coord)
         {
-            float spacing = 10;
-            return new Vector3(-coord.x * spacing, 0f, coord.y * spacing);
+            return new Vector3(-coord.x * PLANE_SIZE, 0f, coord.y * PLANE_SIZE);
         }
 
 
@@ -100,22 +103,17 @@ namespace FoodyGo.Mapping
         /// 특정 위도, 경도에 해당하는 MapTile 의 인덱스를 계산 
         /// </summary>
         /// <param name="center">MapTile을 그릴 위도, 경도 중심</param>
-        /// <returns>MapTile 인덱스</returns>
+        /// <returns>유니티상 사이즈에 맞춘 이동거리</returns>
         Vector2Int CalcTileCoordinate(MapLocation center)
         {
-            // 메르카토르 픽셀 좌표 (zoom = 21)
-            int pixelX21 = GoogleMapUtils.LonToX(center.longitude);
-            int pixelY21 = GoogleMapUtils.LatToY(center.latitude);
-
-            // GoogleMap zoomLevel 1당 2배씩 값이 작아지기때문에
-            // Zoomlevel 차이만큼 오른쪽으로 BIt-Shift하면 원하는 픽셀값을 구할 수 있다.
-            int shift = 21 - _gpsLocationService.mapTileZoomLevel;
-            int pixelX = pixelX21 >> shift;
-            int pixelY = pixelY21 >> shift;
+            double meterPerLatDeg = 110574f;
+            double meterPerLonDeg = 111320f * Mathf.Cos((float)_mapOrigin.latitude * Mathf.Deg2Rad);
             
-            // MapTile 당 픽셀수로 나누면 인덱스를 구할 수 있음
-           return new Vector2Int(Mathf.RoundToInt(pixelX / (float)_gpsLocationService.mapTileSizePixels), Mathf.RoundToInt(pixelY / (float)_gpsLocationService.mapTileSizePixels));
+            // 중심점에서 이동한 거리
+            double deltaOfLatDeg = (center.latitude - _mapOrigin.latitude) * meterPerLatDeg;
+            double deltaofLonDeg = (center.longitude - _mapOrigin.longitude) * meterPerLonDeg;
             
+            return new Vector2Int(-Mathf.FloorToInt((float)deltaofLonDeg / PLANE_SIZE), Mathf.FloorToInt((float)deltaOfLatDeg / PLANE_SIZE));
         }
 
         private void HandleCenterShift()
@@ -142,52 +140,31 @@ namespace FoodyGo.Mapping
         }
 
 
-        /// <summary>
-        /// x축 방향 이동
-        /// </summary>
-        /// <param name="direction">타일이 움직일 방향</param>
-        private void ShiftHorizontal(int direction)
+       private void ShiftHorizontal(int dir)
         {
-            if (Mathf.Abs(direction) != 1)
-            {
-                throw new ArgumentException("wrong direction");
-            }
-            
-            Debug.Log($"ShiftHorizontal {direction}");
+            if (Mathf.Abs(dir) != 1)
+                throw new ArgumentException("Wrong direction.");
 
-            int oldX = direction > 0 ? 0 : GRID_SIZE - 1; // 사라질 인덱스
-            int newX = direction > 0 ? GRID_SIZE - 1 : 0; // 새로 생길 인덱스
+            Debug.Log($"ShiftHorizontal {dir}");
 
+            int oldX = dir > 0 ? 0 : GRID_SIZE - 1; // 사라질 인덱스
+            int newX = dir > 0 ? GRID_SIZE - 1 : 0; // 새로 배치될 인덱스
             GoogleMapTile[] olds = new GoogleMapTile[GRID_SIZE];
 
             for (int i = 0; i < GRID_SIZE; i++)
-            {
                 olds[i] = _mapTiles[oldX, i];
-            }
 
-            _currentCenterTileCoord.x += direction;
+            _currentCenterTileCoord.x += dir;
 
-            // 배열 한칸씩 다 당겨주는 코드
-            if (direction > 0)
-            {
+            // 배열 한칸씩 다 당겨줌
+            if (dir > 0)
                 for (int x = 0; x < GRID_SIZE - 1; x++)
-                {
                     for (int y = 0; y < GRID_SIZE; y++)
-                    {
                         _mapTiles[x, y] = _mapTiles[x + 1, y];
-                    }
-                }
-            }
             else
-            {
                 for (int x = GRID_SIZE - 1; x > 0; x--)
-                {
                     for (int y = 0; y < GRID_SIZE; y++)
-                    {
                         _mapTiles[x, y] = _mapTiles[x - 1, y];
-                    }
-                }
-            }
 
             for (int y = 0; y < GRID_SIZE; y++)
             {
@@ -200,86 +177,66 @@ namespace FoodyGo.Mapping
                 {
                     GoogleMapTile tile = _mapTiles[x, y];
                     Vector2Int offset = new Vector2Int(TILE_OFFSETS[x], TILE_OFFSETS[y]);
-                    tile.tileOffset = offset;
                     tile.worldCenterLocation = _gpsLocationService.mapCenter;
+                    tile.tileOffset = offset;
                     tile.transform.position = CalcWorldPosition(_currentCenterTileCoord + offset);
 
                     if (x == newX)
-                    {
                         tile.RefreshMapTile();
-                    }
                 }
             }
         }
+
         /// <summary>
-        /// Z축 방향 이동
+        /// z 축 방향 이동
         /// </summary>
-        /// <param name="direction">타일이 움직일 방향</param>
-         private void ShiftVertical(int direction)
+        /// <param name="dir"></param>
+        private void ShiftVertical(int dir)
+        {
+            if (Mathf.Abs(dir) != 1)
+                throw new ArgumentException("Wrong direction.");
+
+            Debug.Log($"ShiftVertical {dir}");
+
+            int oldY = dir > 0 ? 0 : GRID_SIZE - 1; // 사라질 인덱스
+            int newY = dir > 0 ? GRID_SIZE - 1 : 0; // 새로 배치될 인덱스
+            GoogleMapTile[] olds = new GoogleMapTile[GRID_SIZE];
+
+            for (int i = 0; i < GRID_SIZE; i++)
+                olds[i] = _mapTiles[i, oldY];
+
+            _currentCenterTileCoord.y += dir;
+
+            // 배열 한칸씩 다 당겨줌
+            if (dir > 0)
+                for (int x = 0; x < GRID_SIZE; x++)
+                for (int y = 0; y < GRID_SIZE - 1; y++)
+                    _mapTiles[x, y] = _mapTiles[x, y + 1];
+            else
+                for (int x = 0; x < GRID_SIZE; x++)
+                for (int y = GRID_SIZE - 1; y > 0; y--)
+                    _mapTiles[x, y] = _mapTiles[x, y - 1];
+
+            for (int x = 0; x < GRID_SIZE; x++)
             {
-                if (Mathf.Abs(direction) != 1)
-                {
-                    throw new ArgumentException("wrong direction");
-                }
+                _mapTiles[x, newY] = olds[x];
+            }
 
-                Debug.Log($"ShiftVertical {direction}");
-                
-                int oldY = direction > 0 ? 0 : GRID_SIZE - 1; // 사라질 인덱스
-                int newY = direction > 0 ? GRID_SIZE - 1 : 0; // 새로 생길 인덱스
-            
-                GoogleMapTile[] olds = new GoogleMapTile[GRID_SIZE];
+            for (int x = 0; x < GRID_SIZE; x++)
+            {
+                for (int y = 0; y < GRID_SIZE; y++)
+                {
+                    GoogleMapTile tile = _mapTiles[x, y];
+                    Vector2Int offset = new Vector2Int(TILE_OFFSETS[x], TILE_OFFSETS[y]);
+                    tile.worldCenterLocation = _gpsLocationService.mapCenter;
+                    tile.tileOffset = offset;
+                    tile.transform.position = CalcWorldPosition(_currentCenterTileCoord + offset);
 
-                for (int i = 0; i < GRID_SIZE; i++)
-                {
-                    olds[i] = _mapTiles[i, oldY];
-                }
-
-                _currentCenterTileCoord.y += direction;
-            
-                // 배열 한칸씩 다 당겨주는 코드
-                if (direction > 0)
-                {
-                    for (int x = 0; x < GRID_SIZE; x++)
-                    {
-                        for (int y = 0; y < GRID_SIZE - 1; y++)
-                        {
-                            _mapTiles[x, y] = _mapTiles[x, y + 1];    
-                        }
-                    }
-                }
-                else
-                {
-                    for (int x = 0; x < GRID_SIZE; x++)
-                    {
-                        for (int y = GRID_SIZE - 1; y > 0; y--)
-                        {
-                            _mapTiles[x, y] = _mapTiles[x, y - 1];    
-                        }
-                    }
-                }
-        
-                for (int x = 0; x < GRID_SIZE; x++)
-                {
-                    _mapTiles[x, newY] = olds[x];
-                }
-
-                for (int x = 0; x < GRID_SIZE; x++)
-                {
-                    for (int y = 0; y < GRID_SIZE; y++)
-                    {
-                        GoogleMapTile tile = _mapTiles[x, y];
-                        Vector2Int offset = new Vector2Int(TILE_OFFSETS[x], TILE_OFFSETS[newY]);
-                        tile.tileOffset = offset;
-                        tile.worldCenterLocation = _gpsLocationService.mapCenter;
-                        tile.transform.position = CalcWorldPosition(_currentCenterTileCoord + offset);
-
-                        if (y == newY)
-                        {
-                            tile.RefreshMapTile();
-                        }
-                    }
+                    if (y == newY)
+                        tile.RefreshMapTile();
                 }
             }
+        }
     }
     
 }
