@@ -101,7 +101,7 @@ namespace FoodyGo.InputSystems
             {
                 _throwObject = Instantiate(_throwObjectPrefab, Camera.main.transform);
             }
-            _throwObject.transform.localPosition = new Vector3(0, -1f, 2.5f);
+            _throwObject.transform.localPosition = new Vector3(-0.5f, -1f, 2.5f);
         }
     }
 }

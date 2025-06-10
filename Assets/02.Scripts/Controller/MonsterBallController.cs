@@ -8,13 +8,10 @@ namespace FoodyGo.Controller
     {
         GameObject _target;
         bool _isThrowing;
-        Rigidbody _rigidbody;
-
-        private void Awake()
-        {
-            _rigidbody = GetComponent<Rigidbody>();
-            _rigidbody.isKinematic = true;
-        }
+        [SerializeField] float _radiuse = 0.7f;
+        [SerializeField] float _bounceDamping = 0.6f;
+        [SerializeField] LayerMask _targetMask;
+        Vector3 _lastVelocity;
 
         public void Throw(GameObject target, float arcHeight, float duration)
         {
@@ -22,10 +19,10 @@ namespace FoodyGo.Controller
             {
                 return;
             }
+
             _target = target;
             StartCoroutine(C_Throw(arcHeight, duration));
         }
-
 
         /// <summary>
         /// 공을 던지는 애니메이션 구현
@@ -36,7 +33,7 @@ namespace FoodyGo.Controller
         IEnumerator C_Throw(float arcHeight, float duration)
         {
             _isThrowing = true;
-            
+
             Vector3 throwStartPosition = transform.position;
             Vector3 throwEndPosition = _target.transform.position;
 
@@ -44,30 +41,43 @@ namespace FoodyGo.Controller
 
             while (elapsedTime < duration)
             {
+                Vector3 lastPosition = transform.position;
                 elapsedTime += Time.deltaTime;
                 float t = Mathf.Clamp01(elapsedTime / duration);
                 float ease = Mathf.Sin(t * Mathf.PI * 0.5f);
                 Vector3 lerp = Vector3.Lerp(throwStartPosition, throwEndPosition, ease);
 
                 float heihtOffset = arcHeight * MathF.Sin(Mathf.PI * ease);
-                Vector3 targetPosition = new Vector3(lerp.x, lerp.y + heihtOffset, lerp.z );
+                Vector3 targetPosition = new Vector3(lerp.x, lerp.y + heihtOffset, lerp.z);
                 transform.position = targetPosition;
+
+                _lastVelocity = (transform.position - lastPosition) / Time.deltaTime;
+
+                if (Physics.SphereCast(lastPosition, _radiuse, _lastVelocity, out RaycastHit hit,
+                        Vector3.Distance(transform.position, lastPosition), _targetMask))
+                {
+                    _isThrowing = false;
+                    StartCoroutine(C_Bounce(hit.normal));
+                    yield break;
+                }
+
                 yield return null;
             }
 
             transform.position = throwEndPosition;
-            _rigidbody.isKinematic = false;
             _isThrowing = false;
         }
 
-        private void OnCollisionEnter(Collision collision)
+        IEnumerator C_Bounce(Vector3 normal)
         {
-            if (collision.gameObject.Equals(_target))
+            Destroy(gameObject, 5.0f);
+            _lastVelocity = Vector3.Reflect(_lastVelocity, normal) * _bounceDamping;
+
+            while (true)
             {
-                //TODO : 이 몬스터 포획
-                Debug.Log("몬스터와 충돌");
-                StopAllCoroutines();
-                _rigidbody.isKinematic = false;
+                _lastVelocity += Physics.gravity * Time.deltaTime;
+                transform.position += _lastVelocity * Time.deltaTime;
+                yield return null;
             }
         }
     }
