@@ -97,6 +97,11 @@ namespace FoodyGo.Mapping
             return new Vector3(-coord.x * PLANE_SIZE, 0f, coord.y * PLANE_SIZE);
         }
 
+        public Vector3 GetWorldPosition(double latitude, double longitude)
+        {
+            Vector2Int coord = CalcTileCoordinate(new MapLocation(latitude, longitude));
+            return CalcWorldPosition(coord);
+        }
 
 
         /// <summary>
@@ -106,8 +111,8 @@ namespace FoodyGo.Mapping
         /// <returns>유니티상 사이즈에 맞춘 이동거리</returns>
         Vector2Int CalcTileCoordinate(MapLocation center)
         {
-            double meterPerLatDeg = 110574f;
-            double meterPerLonDeg = 111320f * Mathf.Cos((float)_mapOrigin.latitude * Mathf.Deg2Rad);
+            double meterPerLatDeg = 110574.0f;
+            double meterPerLonDeg = 111320.0f * Mathf.Cos((float)_mapOrigin.latitude * Mathf.Deg2Rad);
             
             // 중심점에서 이동한 거리
             double deltaOfLatDeg = (center.latitude - _mapOrigin.latitude) * meterPerLatDeg;

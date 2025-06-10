@@ -6,12 +6,13 @@ using FoodyGo.Database;
 using FoodyGo.Services.GPS;
 using FoodyGo.Utils;
 
-namespace FoodyGo.Services
+namespace FoodyGo.Services.NPCs
 {
     public class MonsterService : MonoBehaviour
     {
         public GPSLocationService gpsLocationService;
         public GameObject monsterPrefab;
+        [SerializeField] GoogleMapTileManager _googleMapTileManager;
         private double lastTimestamp;
 
         [Header("Monster Spawn Parameters")]
@@ -97,14 +98,14 @@ namespace FoodyGo.Services
                 var mlon = gpsLocationService.longitude + Random.Range(-longitudeSpawnOffset, longitudeSpawnOffset);
                 var monster = new Monster
                 {
-                    location = new MapLocation(mlon, mlat),
+                    location = new MapLocation(mlat, mlon),
                     spawnTimestamp = gpsLocationService.timeStamp
                 };
                 monsters.Add(monster);
             }
 
             //store players location for easy access in distance calculations
-            var playerLocation = new MapLocation(gpsLocationService.longitude, gpsLocationService.latitude);
+            var playerLocation = new MapLocation(gpsLocationService.latitude, gpsLocationService.longitude);
             //get the current Epoch time in seconds
             var now = Epoch.Now;
 
@@ -151,14 +152,9 @@ namespace FoodyGo.Services
             return 4;
         }
 
-        private Vector3 ConvertToWorldSpace(float longitude, float latitude)
+        private Vector3 ConvertToWorldSpace(double longitude, double latitude)
         {
-            //convert GPS lat/long to world x/y 
-            var x = ((GoogleMapUtils.LonToX(longitude)
-                - gpsLocationService.mapWorldCenter.x) * gpsLocationService.mapScale.x);
-            var y = (GoogleMapUtils.LatToY(latitude)
-                - gpsLocationService.mapWorldCenter.y) * gpsLocationService.mapScale.y;
-            return new Vector3(-x, 0, y);
+            return _googleMapTileManager.GetWorldPosition(latitude, longitude);
         }
 
         private void SpawnMonster(Monster monster)

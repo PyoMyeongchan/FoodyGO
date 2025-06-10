@@ -1,6 +1,7 @@
 using FoodyGo.Database;
 using FoodyGo.Mapping;
 using FoodyGo.Services;
+using FoodyGo.Services.NPCs;
 using UnityEngine;
 
 namespace FoodyGo.Controller

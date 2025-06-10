@@ -205,13 +205,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 10, z: 0}
+  m_LocalRotation: {x: 0.8605938, y: -0, z: -0, w: 0.50929207}
+  m_LocalPosition: {x: 0, y: 7.68, z: 7.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 700034017}
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 118.767, y: 0, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -286,7 +286,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gpsLocationService: {fileID: 629559154}
-  monsterPrefab: {fileID: 100000, guid: 67d04cb2060b7bc448e8f2be915f910c, type: 3}
+  monsterPrefab: {fileID: 297839293705597143, guid: 67d04cb2060b7bc448e8f2be915f910c, type: 3}
+  _googleMapTileManager: {fileID: 407201163}
   monsterSpawnRate: 0.75
   latitudeSpawnOffset: 0.001
   longitudeSpawnOffset: 0.001
@@ -451,7 +452,7 @@ Transform:
   m_GameObject: {fileID: 410087039}
   serializedVersion: 2
   m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalPosition: {x: -0.000000044703484, y: 3, z: 0.000000067055225}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -526,7 +527,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <mapTileScale>k__BackingField: 1
   <mapTileSizePixels>k__BackingField: 640
-  <mapTileZoomLevel>k__BackingField: 14
+  <mapTileZoomLevel>k__BackingField: 17
   _isSimulation: 1
   _simulationTarget: {fileID: 2139665447}
   _simulationStartLocation:
@@ -609,7 +610,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2139665447}
-  - {fileID: 330585546}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &832575517
@@ -746,7 +746,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 69b8d4b5b182ffb4aa40aa5c56b5b752, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -775,7 +775,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2139665443}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &2139665447
 Transform:
   m_ObjectHideFlags: 0
@@ -785,8 +785,8 @@ Transform:
   m_GameObject: {fileID: 2139665443}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 700034017}
@@ -796,6 +796,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 410087041}
+  - {fileID: 330585546}
   - {fileID: 832575519}
   - {fileID: 629559153}
   - {fileID: 407201162}
