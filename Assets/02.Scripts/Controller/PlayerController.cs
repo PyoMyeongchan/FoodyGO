@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using FoodyGo.Mapping;
+using FoodyGo.UI;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,6 +10,7 @@ namespace FoodyGo.Controller
 {
     public class PlayerController : MonoBehaviour
     {
+        [SerializeField] LayerMask _battleMask;
 #if UNITY_EDITOR
         // 현재 속도
         public Vector3 velocity;
@@ -16,6 +19,7 @@ namespace FoodyGo.Controller
         
         [SerializeField] InputActionReference _moveInputAction;
         [SerializeField] GoogleMapTileManager _mapTileManager;
+        [SerializeField] CinemachineCamera _cam;
 
         IEnumerator Start()
         {
@@ -39,9 +43,17 @@ namespace FoodyGo.Controller
 
         private void FixedUpdate()
         {
-            if (direction.sqrMagnitude > 0)
+            Vector3 camForward = _cam.transform.forward;
+            Vector3 camRight = _cam.transform.right;
+            
+            camForward.y = 0f;
+            camRight.y = 0f;
+            
+            Vector3 movedirection = (camForward * direction.z + camRight * direction.x);
+            
+            if (movedirection.sqrMagnitude > 0)
             {
-                velocity = direction * speed;
+                velocity = movedirection.normalized * speed;
                 transform.Translate(velocity * Time.fixedDeltaTime, Space.World);
             }
             else
@@ -61,6 +73,15 @@ namespace FoodyGo.Controller
             direction = Vector3.zero;
         }
 #endif
+        private void OnTriggerEnter(Collider other)
+        {
+            if ((1 << other.gameObject.layer & _battleMask.value) > 0)
+            {
+                UI_BattleConfirmWindow window = UIManager.instance.Resolve<UI_BattleConfirmWindow>();
+                window.Show();
+            }
+        }
+        
     }    
     
 }
