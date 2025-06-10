@@ -56,8 +56,12 @@ namespace FoodyGo.Controller
                 if (Physics.SphereCast(lastPosition, _radiuse, _lastVelocity, out RaycastHit hit,
                         Vector3.Distance(transform.position, lastPosition), _targetMask))
                 {
-                    _isThrowing = false;
-                    StartCoroutine(C_Bounce(hit.normal));
+                    if (hit.transform.TryGetComponent(out MonsterController monsterController))
+                    {
+                        monsterController.Damage(25f);
+                        _isThrowing = false;
+                        StartCoroutine(C_Bounce(hit.normal));
+                    }
                     yield break;
                 }
 

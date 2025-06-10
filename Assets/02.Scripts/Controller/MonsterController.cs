@@ -1,3 +1,4 @@
+using System;
 using FoodyGo.Database;
 using FoodyGo.Mapping;
 using FoodyGo.Services;
@@ -14,7 +15,33 @@ namespace FoodyGo.Controller
         public Animator animator;
         public float animatorSpeed;
         public float monsterWarmRate = .0001f;
-        
+
+        private float _hp;
+        public float hp
+        {
+            get => _hp;
+            set
+            {
+                _hp = value;
+                animatorSpeed = _hp / maxHp;
+
+                if (_hp <= 0)
+                {
+                    //TODO : 포획 성공 로직
+                    Destroy(gameObject);
+                }
+            }
+        }
+        public float maxHp { get;} = 100f;
+        private void Awake()
+        {
+            _hp = maxHp;
+        }
+        public void Damage(float amount)
+        {
+            hp -= amount;
+        }
+
         // Use this for initialization
         void Start()
         {

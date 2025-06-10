@@ -22,7 +22,6 @@ namespace FoodyGo.InputSystems
         
         [SerializeField]GameObject _target;
         bool _isDragging;
-        bool _isThrowing;
         double _beginDragTimeMark; 
         Vector2 _cachedTouchPosition;
         Vector2 _cachedBeginDragPosition;
@@ -50,21 +49,19 @@ namespace FoodyGo.InputSystems
 
         void OnTouchPositionPerformed(InputAction.CallbackContext context)
         {
-            if (_isThrowing)
+            if (_throwObject == null)
             {
                 return;
             }
-
             _cachedTouchPosition = context.ReadValue<Vector2>();
         }
 
         void OnTouchPressPerformed(InputAction.CallbackContext context)
         {
-            if (_isThrowing)
+            if (_throwObject == null)
             {
                 return;
             }
-            
             // 터치 눌림
             if (context.ReadValueAsButton())
             {
@@ -89,7 +86,10 @@ namespace FoodyGo.InputSystems
 
                     if (dragVelocityY >= _throwSpeed)
                     {
+                        _throwObject.transform.SetParent(null);
                         _throwObject.Throw(_target,2.0f,1.0f);
+                        _throwObject = null;
+                        Invoke(nameof(ResetThrowObject), 1f);
                     }
                 }
             }
