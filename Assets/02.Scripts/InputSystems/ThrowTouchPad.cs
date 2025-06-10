@@ -1,5 +1,4 @@
-using System;
-using System.Collections;
+using FoodyGo.Controller;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,8 +11,8 @@ namespace FoodyGo.InputSystems
         [SerializeField] float _throwSpeed = 35f;
 
         [Tooltip("던질 공 프리팹")] 
-        [SerializeField] GameObject _throwObjectPrefab;
-        GameObject _throwObject;
+        [SerializeField] MonsterBallController _throwObjectPrefab;
+        MonsterBallController _throwObject;
         
         [Header("Input Actions")]
         [Tooltip("스크린 터치 좌표")]
@@ -90,43 +89,10 @@ namespace FoodyGo.InputSystems
 
                     if (dragVelocityY >= _throwSpeed)
                     {
-                        StartCoroutine(C_Throw(2f, 1f));
+                        _throwObject.Throw(_target,2.0f,1.0f);
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// 공을 던지는 애니메이션 구현
-        /// </summary>
-        /// <param name="arcHeight">포물선 높이</param>
-        /// <param name="duration">던져진 동안의 시간</param>
-        /// <returns></returns>
-        IEnumerator C_Throw(float arcHeight, float duration)
-        {
-            _isThrowing = true;
-            
-            _throwObject.transform.SetParent(null);
-            Vector3 throwStartPosition = _throwObject.transform.position;
-            Vector3 throwEndPosition = _target.transform.position;
-
-            float elapsedTime = 0f;
-
-            while (elapsedTime < duration)
-            {
-                elapsedTime += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsedTime / duration);
-                float ease = Mathf.Sin(t * Mathf.PI * 0.5f);
-                Vector3 lerp = Vector3.Lerp(throwStartPosition, throwEndPosition, ease);
-
-                float heihtOffset = arcHeight * MathF.Sin(Mathf.PI * ease);
-                Vector3 targetPosition = new Vector3(lerp.x, lerp.y + heihtOffset, lerp.z );
-                _throwObject.transform.position = targetPosition;
-                yield return null;
-            }
-
-            _throwObject.transform.position = throwEndPosition;
-            _isThrowing = false;
         }
 
         void ResetThrowObject()
