@@ -1,6 +1,5 @@
 using System;
 using FoodyGo.Mapping;
-using Unity.Android.Types;
 using UnityEngine;
 
 namespace FoodyGo.Services.GPS
