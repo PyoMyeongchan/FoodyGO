@@ -1,23 +1,32 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using FoodyGo.Controllers;
+using FoodyGo.Mapping;
 using FoodyGo.Services.GooglePlaces;
 using FoodyGo.Services.GPS;
 using UnityEngine;
-
 
 namespace FoodyGo.Manager
 {
     public class PlacesMarkerManager : MonoBehaviour
     {
-        [SerializeField] GameObject _markerPrefab;
+        [SerializeField] PlaceMarkerController _markerPrefab;
         [SerializeField] GooglePlacesService _googlePlacesService;
         [SerializeField] GPSLocationService _gpsLocationService;
         [SerializeField] int _markerCount = 10;
-        private List<GameObject> _markers;
+        private List<PlaceMarkerController> _markers;
 
         private void Awake()
         {
-            _markers = new List<GameObject>(_markerCount);
+            _markers = new List<PlaceMarkerController>(_markerCount);
+            
+        }
+
+        IEnumerator Start()
+        {
+            yield return new WaitUntil(()=> _gpsLocationService.isReady);
+            RefreshMarkers();
         }
 
         public void RefreshMarkers()
@@ -35,7 +44,9 @@ namespace FoodyGo.Manager
 
             foreach (var place in places)
             {
-                GameObject marker = Instantiate(_markerPrefab);
+                PlaceMarkerController marker = Instantiate(_markerPrefab);
+                marker.RefreshPlace(place.name);
+                marker.transform.position = new Vector3(GoogleMapUtils.LonToUnityX(place.longitude, _gpsLocationService.mapOrigin.longitude, _gpsLocationService.mapTileZoomLevel), 0f, GoogleMapUtils.LatToUnityY(place.latitude, _gpsLocationService.mapOrigin.latitude, _gpsLocationService.mapTileZoomLevel));
                 _markers.Add(marker);
             }
         }
