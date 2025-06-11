@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using FoodyGo.Mapping;
+using FoodyGo.Services.GPS;
 using FoodyGo.UI;
+using FoodyGo.Utils.DI;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -72,7 +74,13 @@ namespace FoodyGo.Controller
         {
             direction = Vector3.zero;
         }
+#elif UNITY_ANDROID || UNITY_IOS
+
+
 #endif
+
+        [Inject] GPSLocationService _GPSLocationService;
+        
         private void OnTriggerEnter(Collider other)
         {
             if ((1 << other.gameObject.layer & _battleMask.value) > 0)
