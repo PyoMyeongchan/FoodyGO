@@ -50,7 +50,10 @@ namespace FoodyGo.Utils.DI
                 if (fieldInfo.GetCustomAttributes<InjectAttribute>() != null)
                 {
                     object value = container.Resolve(fieldInfo.FieldType);
-                    fieldInfo.SetValue(target, value);
+                    if (value != null)
+                    {
+                        fieldInfo.SetValue(target, value);
+                    }
                 }
             }
         }
